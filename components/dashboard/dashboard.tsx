@@ -13,9 +13,7 @@ import {
   Users, 
   Calendar, 
   FileText, 
-  ExternalLink, 
-  Github, 
-  Linkedin, 
+  ExternalLink,
   Globe,
   Loader2,
   AlertCircle,
@@ -25,6 +23,7 @@ import {
   Save,
   X
 } from 'lucide-react';
+import { Github, Linkedin } from '@/components/ui/brand-icons';
 
 interface Participant {
   name: string;

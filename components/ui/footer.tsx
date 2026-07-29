@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Mail, Twitter, Linkedin, Globe } from 'lucide-react';
+import { Mail, Globe } from 'lucide-react';
+import { Twitter, Linkedin } from '@/components/ui/brand-icons';
 
 
 export function Footer() {
