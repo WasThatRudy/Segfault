@@ -266,7 +266,9 @@ export async function POST(request: Request) {
       if (!participant.phone?.trim()) {
         errors.push("Phone number is required");
       } else if (!validatePhone(participant.phone)) {
-        errors.push("Phone number must be 10 digits");
+        errors.push(
+          "Phone number must be a valid 10-digit Indian mobile number (starting with 6-9)"
+        );
       } else {
         const fullPhone = (participant.stdCode || "+91") + participant.phone;
         if (phones.has(fullPhone)) {

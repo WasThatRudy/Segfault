@@ -297,7 +297,7 @@ export default function ParticipantDetailsStep({ onNext, onBack }: ParticipantDe
               />
             </div>
             {getParticipantError('phone') && (
-              <p className="text-red-400 text-xs sm:text-sm mt-1">Please enter a valid 10-digit phone number</p>
+              <p className="text-red-400 text-xs sm:text-sm mt-1">Please enter a valid 10-digit Indian mobile number (starting with 6-9)</p>
             )}
           </div>
 

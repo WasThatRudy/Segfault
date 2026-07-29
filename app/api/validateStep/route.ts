@@ -173,7 +173,7 @@ export async function POST(request: Request) {
             isValid = false;
           } else if (!validatePhone(participant.phone)) {
             errors[`participant_${index}_phone`] =
-              "Phone number must be 10 digits";
+              "Phone number must be a valid 10-digit Indian mobile number (starting with 6-9)";
             isValid = false;
           }
 
