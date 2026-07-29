@@ -212,6 +212,18 @@ export function createRateLimitMiddleware(
       // If successful, allow the request to proceed
       return null; // null means no error, continue processing
     } catch (rateLimiterRes: unknown) {
+      // consume() rejects with a RateLimiterRes when the limit is exceeded,
+      // but with a plain Error when the Redis store itself fails. A store
+      // failure must not be reported to users as a rate limit — fail open
+      // and let the request through (rate limiting is defense-in-depth).
+      if (rateLimiterRes instanceof Error) {
+        console.error(
+          `Rate limiter (${limiterType}): Redis store error, failing open:`,
+          rateLimiterRes
+        );
+        return null;
+      }
+
       // Rate limit exceeded
       const errorRes = rateLimiterRes as {
         remainingPoints?: number;
@@ -224,8 +236,9 @@ export function createRateLimitMiddleware(
       const response = NextResponse.json(
         {
           status: "error",
-          message: `Too many registration attempts. Please try again in ${Math.round(
-            msBeforeNext / 60000
+          message: `Too many registration attempts. Please try again in ${Math.max(
+            1,
+            Math.ceil(msBeforeNext / 60000)
           )} minutes.`,
           error: "Rate limit exceeded",
           details: {
