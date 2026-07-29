@@ -1,7 +1,6 @@
 import { BackgroundDecorations } from "@/components/ui/background-decorations";
 import { SectionDecorations } from "@/components/ui/section-decorations";
-// import RegistrationForm from "@/components/register/RegistrationForm";
-import RegistrationClosed from "@/components/register/RegistrationClosed";
+import RegistrationForm from "@/components/register/RegistrationForm";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -28,11 +27,7 @@ export default function RegisterPage() {
 
       {/* Main Content */}
       <div className="pt-20 sm:pt-24 md:pt-32 pb-8 sm:pb-12 md:pb-16 px-2 sm:px-4">
-        {/* Registration Form - Temporarily Disabled */}
-        {/* <RegistrationForm /> */}
-        
-        {/* Registration Closed Message */}
-        <RegistrationClosed />
+        <RegistrationForm />
       </div>
     </div>
   );

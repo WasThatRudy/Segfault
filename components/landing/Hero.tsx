@@ -66,14 +66,13 @@ export function Hero() {
             </p>
           </div>
 
-          {/* Register/Login/Dashboard Button */}
+          {/* Register Button */}
           <div className="mt-6 sm:mt-8 md:mt-10 px-4">
-            <button
-              className="px-6 sm:px-8 py-3 sm:py-4 text-white font-bold text-base sm:text-lg rounded-full transition-all duration-300 bg-white/10 backdrop-blur-md shadow-lg shadow-gray-400/20 cursor-not-allowed w-full sm:w-auto max-w-xs sm:max-w-none mx-auto opacity-60 border border-white/20"
-              disabled
-            >
-              Registrations are now closed
-            </button>
+            <a href="/register">
+              <button className="px-6 sm:px-8 py-3 sm:py-4 text-white font-bold text-base sm:text-lg rounded-full transition-all duration-300 bg-[#C83DAD] shadow-lg shadow-[#C83DAD]/20 hover:bg-[#A12A89] hover:shadow-[#A12A89]/20 cursor-pointer w-full sm:w-auto max-w-xs sm:max-w-none mx-auto">
+                Register For Hackathon
+              </button>
+            </a>
           </div>
         </div>
       </div>
