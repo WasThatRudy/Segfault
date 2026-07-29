@@ -7,6 +7,23 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// The Cloudinary SDK rejects with plain objects ({message, http_code} or
+// {error: {message}}), not Error instances — dig the real message out.
+const extractCloudinaryError = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const e = error as {
+      message?: string;
+      http_code?: number;
+      error?: { message?: string; http_code?: number };
+    };
+    const msg = e.message || e.error?.message;
+    const code = e.http_code || e.error?.http_code;
+    if (msg) return code ? `${msg} (HTTP ${code})` : msg;
+  }
+  return String(error);
+};
+
 /**
  * Upload a file to Cloudinary
  * @param filePath - Local file path to upload
@@ -58,8 +75,10 @@ export const uploadToCloudinary = async (
 
     return result.secure_url;
   } catch (error) {
+    const errorMessage = extractCloudinaryError(error);
+
     console.error("Cloudinary upload error:", {
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
       filePath,
       folder,
       resourceType,
@@ -67,27 +86,21 @@ export const uploadToCloudinary = async (
     });
 
     // Provide more specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes("Invalid image file")) {
-        throw new Error(
-          "The uploaded file is not a valid image or document format"
-        );
-      } else if (error.message.includes("File size too large")) {
-        throw new Error("The uploaded file exceeds the maximum allowed size");
-      } else if (error.message.includes("timeout")) {
-        throw new Error(
-          "File upload timed out. Please try again with a smaller file"
-        );
-      } else if (error.message.includes("configuration")) {
-        throw error; // Re-throw configuration errors as-is
-      }
+    if (errorMessage.includes("Invalid image file")) {
+      throw new Error(
+        "The uploaded file is not a valid image or document format"
+      );
+    } else if (errorMessage.includes("File size too large")) {
+      throw new Error("The uploaded file exceeds the maximum allowed size");
+    } else if (errorMessage.includes("timeout")) {
+      throw new Error(
+        "File upload timed out. Please try again with a smaller file"
+      );
+    } else if (errorMessage.includes("configuration")) {
+      throw error; // Re-throw configuration errors as-is
     }
 
-    throw new Error(
-      `Failed to upload file: ${
-        error instanceof Error ? error.message : "Unknown error occurred"
-      }`
-    );
+    throw new Error(`Failed to upload file: ${errorMessage}`);
   }
 };
 
