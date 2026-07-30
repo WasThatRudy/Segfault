@@ -1,0 +1,499 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   SegFault 2026 — design tokens
+   Spec: .claude/reference/design-language.md
+   Warm near-black, hairline grid, one accent used almost nowhere.
+   ========================================================================= */
+
+@theme {
+  /* --- surfaces: warm near-black, never pure #000 --- */
+  --color-ink: #141110; /* page */
+  --color-ink-panel: #191614; /* barely-lifted panel */
+  --color-ink-deep: #0f0d0c; /* footer / inset wells */
+
+  /* --- text --- */
+  --color-bone: #ede7e0; /* body + headlines */
+  --color-muted: #9a938c; /* labels, secondary copy — 6.20:1 on ink */
+  /* faint is 2.60:1 on ink — DECORATIVE ONLY. Never body copy, never the only
+     label on a thing, never text that appears nowhere else. */
+  --color-faint: #5c5651;
+
+  /* --- lines --- */
+  --color-rule: #2a2522; /* the hairline. everything is built from this */
+  --color-rule-soft: #201c1a;
+
+  /* --- accent: FILL ONLY. 2.49:1 as text on ink → fails AA at every size.
+         Permitted placements are the 5-item accent budget in the spec.       */
+  --color-accent: #4e03ff;
+  /* hover state for accent fills — brighter, and bone on it is still 5.59:1.
+     A colour shift, not a filter: filters are banned (motion.md rule 2). */
+  --color-accent-hi: #5f18ff;
+  --color-accent-text: #8a5cff; /* 4.52:1 — only if accent *text* is unavoidable */
+  --color-ok: #6ee7a0; /* mono/data contexts only: open, confirmed, done */
+  --color-err: #ff7a66; /* mono/data contexts only: form errors. 6.7:1 on ink */
+
+  /* --- type --- */
+  /* GlyphFallback must sit directly after Chalet: it is what supplies ₹ → ✓ ✕,
+     which Chalet does not contain. Without it in the stack the @font-face below
+     is dead code and those glyphs fall through to a generic face. */
+  --font-display: var(--font-chalet-london), "GlyphFallback", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-source-code-pro), ui-monospace, monospace;
+
+  /* --- layout --- */
+  --spacing-rail: 1.5rem;
+  --container-frame: 74rem;
+
+  /* --- motion tokens (mirrored in src/lib/motion.ts) --- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* To swap the Chalet cut, point --font-display at --font-chalet-ny instead.
+   Both cuts are weight 550; they are different designs, not different weights. */
+
+@layer base {
+  html {
+    background-color: var(--color-ink);
+    color-scheme: dark;
+    /* Every in-page CTA is a plain #hash link, so one declaration covers all of
+       them. `Section`'s scroll-mt keeps the target clear of the sticky nav. */
+    scroll-behavior: smooth;
+  }
+
+  /* Respect the OS setting — a reduced-motion user gets the instant jump. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-display);
+    /* Chalet ships a single weight (550). Never let the browser fake a bold. */
+    font-weight: 500;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Chalet has no ₹ → ✓ ✕. Source Code Pro does. Let only those fall through. */
+  @font-face {
+    font-family: "GlyphFallback";
+    src: local("Source Code Pro"), local("Menlo"), local("Arial Unicode MS");
+    unicode-range: U+20B9, U+2192, U+2713, U+2715, U+2588, U+2591;
+  }
+
+  /* the loader sets this while it runs, so the page can't be scrolled behind it */
+  html[data-loading="true"],
+  html[data-loading="true"] body {
+    overflow: hidden;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-bone);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    /* display type: tight, negative-tracked, sentence case, ends in a period */
+    letter-spacing: -0.025em;
+    line-height: 1;
+    text-wrap: balance;
+  }
+}
+
+@layer utilities {
+  /* the mono micro-label. muted, NOT accent — see the accent budget. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .label-faint {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  /* The 2.75rem floor was set for desktop and broke the headline on phones: at
+     390px "is just an error code." needs 391px and only has 340px, so the hero
+     wrapped to four ragged lines instead of the authored two. The second term
+     caps the size at what the narrower line can actually fit — it binds below
+     ~460px and the clamp takes over above it, so the curve stays continuous. */
+  .h-hero {
+    font-size: min(clamp(2.75rem, 7.4vw, 6.5rem), calc(10.2vw - 3px));
+  }
+  .h-section {
+    font-size: clamp(2rem, 5vw, 3.75rem);
+  }
+  .h-card {
+    font-size: clamp(1.25rem, 1.7vw, 1.5rem);
+    line-height: 1.1;
+  }
+
+  .copy {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--color-muted);
+  }
+
+  /* fine film grain. no blur, no glow — depth comes from borders only. */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Graph-paper field with sparse accent dots at intersections (accent budget #3).
+     Deliberately near-subliminal: it should register as texture, not as a grid you
+     read. The dots are the only accent — at 45% they read as blue specks on a
+     dark page, so they sit at 18%, just enough to warm the intersections. */
+  .field {
+    background-image:
+      radial-gradient(
+        circle at 1px 1px,
+        color-mix(in srgb, var(--color-accent) 18%, transparent) 1px,
+        transparent 0
+      ),
+      linear-gradient(to right, color-mix(in srgb, var(--color-rule-soft) 45%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-rule-soft) 45%, transparent) 1px, transparent 1px);
+    background-size:
+      112px 112px,
+      112px 112px,
+      112px 112px;
+  }
+
+  /* Notched corner button — the shape, in place of a border radius.
+     A clip-path cuts any `border` along the diagonal, leaving the corner open, so
+     outlined buttons stack two clipped layers instead: the outer one is the rule
+     colour, the inner is inset 1px and carries the fill. See Button.tsx. */
+  .notch {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%);
+  }
+
+  /* Codrops-style pointer mask, retuned to the event's ink / bone palette.
+     The characters sit behind the card content, preserving every text contrast
+     and the grid's hairline geometry. */
+  .code-background {
+    --code-x: 50%;
+    --code-y: 50%;
+    isolation: isolate;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    background: var(--color-ink);
+  }
+
+  .code-background__content {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+  }
+
+  .code-background__interior {
+    position: absolute;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.55;
+    letter-spacing: 0.09em;
+    overflow-wrap: anywhere;
+    color: color-mix(in srgb, var(--color-bone) 55%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms var(--ease-out-expo);
+    -webkit-mask-image: radial-gradient(180px circle at var(--code-x) var(--code-y), #000 0%, rgba(0, 0, 0, 0.58) 38%, transparent 74%);
+    mask-image: radial-gradient(180px circle at var(--code-x) var(--code-y), #000 0%, rgba(0, 0, 0, 0.58) 38%, transparent 74%);
+  }
+
+  /* One single field, bleeding 1px past the shared hairlines. It used to be two
+     layers — a padded interior plus four edge strips at a different opacity —
+     which left a visible seam inside every card where the two met. */
+  .code-background__interior {
+    inset: -1px;
+    z-index: 0;
+    padding: 0;
+  }
+
+  .code-background__blast {
+    position: absolute;
+    z-index: 0;
+    overflow: hidden;
+    /* padding 0 + inset -1px: the same full-bleed field as the hover layer, so
+       the splash's characters sit exactly on top of the ones already there. */
+    inset: -1px;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.55;
+    letter-spacing: 0.09em;
+    overflow-wrap: anywhere;
+    /* the lighter accent tint: #4e03ff on ink is 2.49:1, which at 10px read as a
+       dim rectangular smudge rather than a splash */
+    color: var(--color-accent-text);
+    opacity: 0;
+    pointer-events: none;
+    /* A soft radial mask, not a hard clip circle: the accent characters fade out
+       towards the edge of the blast so it reads as a pulse under the cursor
+       rather than a growing disc with a visible rim. The radius is animated
+       through the registered --blast-r property below. */
+    -webkit-mask-image: radial-gradient(
+      var(--blast-r) circle at var(--code-x) var(--code-y),
+      #000 0%,
+      rgba(0, 0, 0, 0.72) 42%,
+      transparent 76%
+    );
+    mask-image: radial-gradient(
+      var(--blast-r) circle at var(--code-x) var(--code-y),
+      #000 0%,
+      rgba(0, 0, 0, 0.72) 42%,
+      transparent 76%
+    );
+    animation: code-accent-blast 620ms var(--ease-in-out-soft) forwards;
+  }
+
+  /* A sparse accent trace gives the code field a signal without turning the
+     section into a purple panel. It is decorative text within the hover fill. */
+  .code-background__interior {
+    background-image:
+      /* a small accent tint riding under the cursor, on top of the base field */
+      radial-gradient(
+        110px circle at var(--code-x) var(--code-y),
+        color-mix(in srgb, var(--color-accent-text) 85%, transparent) 0%,
+        color-mix(in srgb, var(--color-accent-text) 45%, transparent) 45%,
+        transparent 72%
+      ),
+      linear-gradient(
+        105deg,
+        color-mix(in srgb, var(--color-bone) 55%, transparent) 0 74%,
+        color-mix(in srgb, var(--color-accent) 70%, transparent) 74% 81%,
+        color-mix(in srgb, var(--color-bone) 55%, transparent) 81% 100%
+      );
+    background-size: auto, 15rem 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .code-background--active .code-background__interior {
+    opacity: 0.3;
+  }
+
+}
+
+/* Hero radar: a once-a-minute sweep and a breathing centre dot. transform-box
+   fill-box makes the SVG elements rotate about their own centre. */
+.radar-spin,
+.radar-spin-reverse {
+  transform-box: fill-box;
+}
+
+.radar-spin {
+  transform-origin: center;
+  animation: radar-spin 60s linear infinite;
+}
+
+/* the arc's bounding box is the quarter from (160,72) to (248,160); the ring
+   centre (160,160) is that box's bottom-left corner */
+.radar-spin-reverse {
+  transform-origin: 0% 100%;
+  animation: radar-spin 90s linear infinite reverse;
+}
+
+@keyframes radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-pulse {
+  animation: radar-pulse 3.6s var(--ease-in-out-soft, ease-in-out) infinite;
+}
+
+@keyframes radar-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Footer core-dump field: a radial re-ink under the pointer. The accent copy
+   is fully painted but masked to a soft circle at --field-x/y; hover only
+   fades it in, and the mask position updates via CSS vars without renders. */
+.cursor-field__tint {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms var(--ease-out-expo);
+  -webkit-mask-image: radial-gradient(
+    220px circle at var(--field-x, 50%) var(--field-y, 50%),
+    #000 0%,
+    rgba(0, 0, 0, 0.7) 45%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    220px circle at var(--field-x, 50%) var(--field-y, 50%),
+    #000 0%,
+    rgba(0, 0, 0, 0.7) 45%,
+    transparent 78%
+  );
+}
+
+.cursor-field--active .cursor-field__tint {
+  opacity: 1;
+}
+
+/* Wordmark pixel-glitch. The base mark never moves; two ghost copies sit on
+   top, each clipped to a horizontal band and snapped between positions with
+   steps(1) so the displacement reads as blocky corruption, not a smooth slide.
+   Ghosts are opacity-gated inside the keyframes, so at rest (and effectively
+   under reduced motion) nothing is visible. */
+.wordmark-glitch {
+  position: relative;
+  display: block;
+}
+
+.wordmark-glitch__ghost {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wordmark-glitch:hover .wordmark-glitch__ghost--a {
+  animation: wordmark-glitch-a 640ms steps(1, end) infinite;
+}
+
+.wordmark-glitch:hover .wordmark-glitch__ghost--b {
+  animation: wordmark-glitch-b 640ms steps(1, end) infinite;
+}
+
+@keyframes wordmark-glitch-a {
+  0% {
+    opacity: 1;
+    clip-path: inset(8% 0 62% 0);
+    transform: translateX(3px);
+  }
+  25% {
+    opacity: 1;
+    clip-path: inset(58% 0 12% 0);
+    transform: translateX(-3px);
+  }
+  50% {
+    opacity: 0;
+    clip-path: inset(8% 0 62% 0);
+    transform: none;
+  }
+  75% {
+    opacity: 1;
+    clip-path: inset(30% 0 40% 0);
+    transform: translateX(2px);
+  }
+}
+
+@keyframes wordmark-glitch-b {
+  0% {
+    opacity: 1;
+    clip-path: inset(66% 0 0 0);
+    transform: translateX(-2px);
+  }
+  25% {
+    opacity: 0;
+    clip-path: inset(66% 0 0 0);
+    transform: none;
+  }
+  50% {
+    opacity: 1;
+    clip-path: inset(0 0 76% 0);
+    transform: translateX(-3px);
+  }
+  75% {
+    opacity: 1;
+    clip-path: inset(48% 0 26% 0);
+    transform: translateX(3px);
+  }
+}
+
+/* A short pulse travelling along the Online topology connectors. Paths carry
+   pathLength=100, so one dash cycle == one full traversal regardless of the
+   path's real length; negative delays keep the five pulses out of phase. */
+.topology-flow {
+  stroke-dasharray: 12 88;
+  animation: topology-flow 4s linear infinite;
+}
+
+@keyframes topology-flow {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topology-flow {
+    display: none;
+  }
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Registered so the radius interpolates. An unregistered custom property is a
+   plain string to the animation engine and would snap between keyframes. */
+@property --blast-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes code-accent-blast {
+  0% {
+    opacity: 1;
+    --blast-r: 4px;
+  }
+  50% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    --blast-r: 96px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
