@@ -309,7 +309,7 @@ export const LAST_YEAR = {
   /* The 2025 site is still live and holds all 24 submissions with abstracts,
      repos and demo videos. Point people at it — reading last year's ideas is the
      fastest way to calibrate what a good SegFault project looks like. */
-  archiveUrl: "https://segfault.compilertech.org/",
+  archiveUrl: "https://2025.segfault.compilertech.org/",
   archiveLabel: "2025 archive",
   archivePrompt: "Read what got built last year before you pick an idea.",
   examples: [
